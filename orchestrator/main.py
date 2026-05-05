@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import httpx
 import json
@@ -46,3 +48,11 @@ async def command(req: CommandRequest):
         return {"error": "LLM returned invalid JSON", "raw": data["response"]}
 
     return {"input": req.text, "parsed": parsed}
+
+
+@app.get("/")
+async def root():
+    return FileResponse("static/index.html")
+
+
+app.mount("/static", StaticFiles(directory="static"), name="static")

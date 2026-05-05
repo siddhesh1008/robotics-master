@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robotics Master</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding-top: 40px;
+  }
+  h1 {
+    font-size: 28px;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+  .subtitle {
+    color: #888;
+    margin-bottom: 30px;
+    font-size: 14px;
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  input {
+    flex: 1;
+    padding: 14px 16px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+  }
+  input:focus { border-color: #4a9eff; }
+  button {
+    padding: 14px 24px;
+    background: #4a9eff;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button:hover { background: #3a8eef; }
+  button:disabled { background: #333; cursor: not-allowed; }
+  .response {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 100px;
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #b0e0b0;
+  }
+  .label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .examples {
+    margin-top: 30px;
+  }
+  .examples-title {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .chip {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    color: #aaa;
+    font-size: 13px;
+    margin: 4px 4px 4px 0;
+    cursor: pointer;
+  }
+  .chip:hover { background: #252525; color: #fff; }
+  .error { color: #ff6b6b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Robotics Master</h1>
+  <div class="subtitle">Type a command in plain English</div>
+
+  <div class="input-row">
+    <input id="cmd" type="text" placeholder="move the rover forward 2 meters" autofocus>
+    <button id="send">Send</button>
+  </div>
+
+  <div class="label">Response</div>
+  <div id="response" class="response">Waiting for input...</div>
+
+  <div class="examples">
+    <div class="examples-title">Try one</div>
+    <span class="chip" data-cmd="move the rover forward 2 meters">move rover forward 2m</span>
+    <span class="chip" data-cmd="rotate the arm 90 degrees clockwise">rotate arm 90 clockwise</span>
+    <span class="chip" data-cmd="make the companion bot smile">companion bot smile</span>
+    <span class="chip" data-cmd="stop all robots immediately">emergency stop</span>
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('cmd');
+  const button = document.getElementById('send');
+  const responseDiv = document.getElementById('response');
+
+  async function sendCommand() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    button.disabled = true;
+    responseDiv.textContent = 'Thinking...';
+    responseDiv.classList.remove('error');
+
+    try {
+      const res = await fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      responseDiv.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      responseDiv.classList.add('error');
+      responseDiv.textContent = 'Error: ' + err.message;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  button.addEventListener('click', sendCommand);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendCommand();
+  });
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      input.value = chip.dataset.cmd;
+      sendCommand();
+    });
+  });
+</script>
+</body>
+</html>
