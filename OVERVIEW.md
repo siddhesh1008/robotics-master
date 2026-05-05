@@ -6,21 +6,21 @@ Think of it like a smart home hub, but for robots.
 
 ## The big picture
 
-​```mermaid
+```mermaid
 flowchart TB
-    User([You<br/>typing or talking])
-    Master[Mini PC<br/>The Brain]
-    LLM[AI Model<br/>Understands you]
-    Rover[Rover<br/>drives around]
-    Arm[Robotic Arm<br/>picks things up]
-    Bot[Companion Bot<br/>interacts with you]
+    User([You typing or talking])
+    Master[Mini PC - The Brain]
+    LLM[AI Model - Understands you]
+    Rover[Rover - drives around]
+    Arm[Robotic Arm - picks things up]
+    Bot[Companion Bot - interacts with you]
 
     User --> Master
     Master <--> LLM
     Master --> Rover
     Master --> Arm
     Master --> Bot
-​```
+```
 
 ## Why bother?
 
@@ -28,7 +28,7 @@ Right now each robot lives in its own world. The robotic arm doesn't know the ro
 
 ## How a command actually flows
 
-​```mermaid
+```mermaid
 flowchart LR
     A[Say: move rover forward 2 meters]
     B[Brain receives it]
@@ -37,28 +37,28 @@ flowchart LR
     E[Rover does the thing]
 
     A --> B --> C --> D --> E
-​```
+```
 
 Behind the scenes the AI converts plain English into something like:
 
-​```json
+```json
 {
   "robot": "rover",
   "action": "move",
   "parameters": { "distance": 2, "unit": "meters" }
 }
-​```
+```
 
 Robots cannot understand "move forward a bit." They need exact numbers. The AI is the translator.
 
 ## The robots (examples)
 
-​```mermaid
+```mermaid
 flowchart TD
-    Rover[Rover<br/>Wheeled robot with sensors]
-    Arm[Robotic Arm<br/>Multi-joint, picks and places]
-    Bot[Companion Bot<br/>Animated, talks and listens]
-​```
+    Rover[Rover - Wheeled robot with sensors]
+    Arm[Robotic Arm - Multi-joint, picks and places]
+    Bot[Companion Bot - Animated, talks and listens]
+```
 
 Each is a separate project on different hardware. Some run on tiny microcontrollers, some on full Linux computers. The master is what makes them feel like one system.
 
