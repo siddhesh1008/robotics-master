@@ -1,0 +1,18 @@
+services:
+  ros2:
+    image: osrf/ros:humble-desktop
+    container_name: ros2-master
+    network_mode: host
+    ipc: host
+    pid: host
+    privileged: true
+    environment:
+      - ROS_DOMAIN_ID=42
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+    volumes:
+      - ./workspace:/root/ros2_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    stdin_open: true
+    tty: true
+    command: bash
+    restart: unless-stopped

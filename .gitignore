@@ -1,0 +1,29 @@
+# Data and logs
+data/
+*.log
+*.bag
+*.db
+
+# ROS2 build artifacts
+ros2/workspace/build/
+ros2/workspace/install/
+ros2/workspace/log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env files
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
