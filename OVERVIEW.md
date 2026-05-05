@@ -1,4 +1,6 @@
-# What is this?
+# CRCS — what is it, in plain English?
+
+**CRCS stands for Centralized Robotic Control System.**
 
 I'm building a system where one mini computer acts as the brain for a bunch of robots. Instead of each robot being its own isolated project, they all connect back to a central master that coordinates everything.
 
@@ -55,7 +57,7 @@ Robots cannot understand "move forward a bit." They need exact numbers. The AI i
 
 ## The message bus, explained simply
 
-Imagine a public bulletin board. The brain pins notes on it like "rover, drive forward 2 meters." Each robot only reads notes addressed to it. New robots can join the system just by checking the bulletin board, no rewiring needed. This is how the master can grow without getting messy.
+Imagine a public bulletin board. The brain pins notes on it like "rover, drive forward 2 meters." Each robot only reads notes addressed to it. New robots can join the system just by checking the bulletin board, no rewiring needed. This is how CRCS can grow without getting messy.
 
 ## The robots (examples)
 
@@ -66,9 +68,9 @@ flowchart TD
     Bot[Companion Bot - Animated, talks and listens]
 ```
 
-Each is a separate project on different hardware. Some run on tiny microcontrollers, some on full Linux computers. The master is what makes them feel like one system.
+Each is a separate project on different hardware. Some run on tiny microcontrollers, some on full Linux computers. CRCS is what makes them feel like one system.
 
-## What the master can do today
+## What CRCS can do today
 
 - Understand commands written in normal English
 - Convert them into structured robot instructions using a local AI model (no internet needed)
@@ -85,4 +87,4 @@ Each is a separate project on different hardware. Some run on tiny microcontroll
 
 ## The fun part
 
-This is a learning project to get hands-on with embedded systems, robotics, AI, and distributed computing all at once. Every commit is me figuring something new out.
+CRCS is a learning project to get hands-on with embedded systems, robotics, AI, and distributed computing all at once. Every commit is me figuring something new out, in public.
