@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRCS - Rover View</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #888;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 20px;
+  }
+  .canvas-wrap {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 8px;
+    aspect-ratio: 1;
+    position: relative;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .card-title {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 13px;
+  }
+  .stat .key { color: #888; }
+  .stat .val { color: #fff; }
+  .state-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .state-online   { background: #1e3a2e; color: #4ade80; }
+  .state-busy     { background: #3a2e1e; color: #fbbf24; }
+  .state-done     { background: #1e3a2e; color: #4ade80; }
+  .state-offline  { background: #3a1e1e; color: #f87171; }
+  .state-error    { background: #3a1e1e; color: #f87171; }
+  .state-unknown  { background: #2a2a2a; color: #888; }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  input {
+    flex: 1;
+    padding: 10px 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+  input:focus { border-color: #4a9eff; }
+  button {
+    padding: 10px 16px;
+    background: #4a9eff;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:hover { background: #3a8eef; }
+  button:disabled { background: #333; cursor: not-allowed; }
+  .chips {
+    margin-top: 10px;
+  }
+  .chip {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 14px;
+    color: #aaa;
+    font-size: 12px;
+    margin: 3px 3px 3px 0;
+    cursor: pointer;
+  }
+  .chip:hover { background: #252525; color: #fff; }
+  .conn {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .conn-up { background: #4ade80; }
+  .conn-down { background: #f87171; }
+  a.back {
+    color: #4a9eff;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  a.back:hover { text-decoration: underline; }
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="/" class="back">← back to main</a>
+  <h1 style="margin-top:8px;">Rover Live View</h1>
+  <div class="subtitle">
+    <span id="connDot" class="conn conn-down"></span>
+    <span id="connText">connecting...</span>
+  </div>
+
+  <div class="layout">
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="card-title">State</div>
+        <span id="state" class="state-pill state-unknown">unknown</span>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Position</div>
+        <div class="stat"><span class="key">X</span><span class="val" id="posX">—</span></div>
+        <div class="stat"><span class="key">Y</span><span class="val" id="posY">—</span></div>
+        <div class="stat"><span class="key">Heading</span><span class="val" id="heading">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Send command</div>
+        <div class="input-row">
+          <input id="cmd" type="text" placeholder="move forward 3m">
+          <button id="send">Go</button>
+        </div>
+        <div class="chips">
+          <span class="chip" data-cmd="move the rover forward 2 meters">forward 2m</span>
+          <span class="chip" data-cmd="rotate the rover 90 degrees clockwise">rotate 90 cw</span>
+          <span class="chip" data-cmd="rotate the rover 90 degrees counterclockwise">rotate 90 ccw</span>
+          <span class="chip" data-cmd="move the rover backward 1 meter">back 1m</span>
+          <span class="chip" data-cmd="reset the rover">reset</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // World: 20m x 20m, origin at center
+  const WORLD_SIZE = 20;
+
+  // Rover state (target). The drawn rover smoothly animates toward this.
+  let target = { x: 0, y: 0, heading: 90 };
+  let current = { x: 0, y: 0, heading: 90 };
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const size = Math.min(rect.width, rect.height) - 16;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function worldToScreen(x, y) {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const scale = w / WORLD_SIZE;
+    return {
+      sx: w / 2 + x * scale,
+      // Y in world is up, Y in screen is down -> flip
+      sy: h / 2 - y * scale,
+      scale,
+    };
+  }
+
+  function drawGrid() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const scale = w / WORLD_SIZE;
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Minor grid (1m)
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1;
+    for (let i = -WORLD_SIZE / 2; i <= WORLD_SIZE / 2; i++) {
+      const px = w / 2 + i * scale;
+      const py = h / 2 + i * scale;
+      ctx.beginPath();
+      ctx.moveTo(px, 0); ctx.lineTo(px, h);
+      ctx.moveTo(0, py); ctx.lineTo(w, py);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#2a4a6a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); // X axis
+    ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); // Y axis
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#444';
+    ctx.font = '11px monospace';
+    ctx.fillText('+X', w - 20, h / 2 - 6);
+    ctx.fillText('+Y', w / 2 + 6, 14);
+    ctx.fillText('0', w / 2 + 4, h / 2 + 14);
+  }
+
+  function drawRover() {
+    const { sx, sy, scale } = worldToScreen(current.x, current.y);
+    const size = scale * 0.6; // rover ~60cm "footprint" visually
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    // World heading: 0 = +X (east), 90 = +Y (north).
+    // Canvas: rotate clockwise by default. We want the triangle to point
+    // along world heading direction. Convert: angle in radians, then negate
+    // because canvas Y is flipped.
+    const rad = -current.heading * Math.PI / 180;
+    ctx.rotate(rad);
+
+    // Body
+    ctx.fillStyle = '#4a9eff';
+    ctx.strokeStyle = '#88c0ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(size, 0);              // nose (forward)
+    ctx.lineTo(-size * 0.7, size * 0.7);
+    ctx.lineTo(-size * 0.4, 0);
+    ctx.lineTo(-size * 0.7, -size * 0.7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Center dot
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpAngle(a, b, t) {
+    let d = ((b - a + 540) % 360) - 180;
+    return a + d * t;
+  }
+
+  function frame() {
+    // Smooth animation toward target
+    current.x = lerp(current.x, target.x, 0.08);
+    current.y = lerp(current.y, target.y, 0.08);
+    current.heading = lerpAngle(current.heading, target.heading, 0.1);
+
+    drawGrid();
+    drawRover();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // UI helpers
+  const stateEl = document.getElementById('state');
+  const posXEl = document.getElementById('posX');
+  const posYEl = document.getElementById('posY');
+  const headingEl = document.getElementById('heading');
+  const connDot = document.getElementById('connDot');
+  const connText = document.getElementById('connText');
+
+  function applyRoverData(data) {
+    if (!data) return;
+    const pos = data.position || {};
+    if (typeof pos.x === 'number') target.x = pos.x;
+    if (typeof pos.y === 'number') target.y = pos.y;
+    if (typeof pos.heading === 'number') target.heading = pos.heading;
+
+    posXEl.textContent = (target.x).toFixed(2) + ' m';
+    posYEl.textContent = (target.y).toFixed(2) + ' m';
+    headingEl.textContent = (target.heading).toFixed(1) + '°';
+
+    const state = data.state || 'unknown';
+    stateEl.textContent = state;
+    stateEl.className = 'state-pill state-' + state;
+  }
+
+  // WebSocket
+  let ws;
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws`);
+    ws.onopen = () => {
+      connDot.className = 'conn conn-up';
+      connText.textContent = 'live';
+    };
+    ws.onclose = () => {
+      connDot.className = 'conn conn-down';
+      connText.textContent = 'reconnecting...';
+      setTimeout(connect, 1500);
+    };
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'snapshot') {
+        applyRoverData(msg.data.rover);
+      } else if (msg.type === 'status' && msg.robot === 'rover') {
+        applyRoverData(msg.data);
+      }
+    };
+  }
+  connect();
+
+  // Command input
+  const input = document.getElementById('cmd');
+  const sendBtn = document.getElementById('send');
+
+  async function sendCommand(text) {
+    if (!text) text = input.value.trim();
+    if (!text) return;
+    sendBtn.disabled = true;
+    try {
+      await fetch('/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      input.value = '';
+    } catch (err) {
+      console.error(err);
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener('click', () => sendCommand());
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendCommand();
+  });
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => sendCommand(chip.dataset.cmd));
+  });
+</script>
+</body>
+</html>
